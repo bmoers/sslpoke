@@ -30,7 +30,7 @@ public class SSLPokeProxy {
         System.out.println(SSLPokeProxy.class.getName());
 
         if (args.length != 2) {
-            System.out.println("Usage: " + SSLPoke.class.getName() + " <host> <port>");
+            System.out.println("Usage: " + SSLPokeProxy.class.getName() + " <host> <port>");
             System.exit(1);
         }
 
@@ -52,7 +52,7 @@ public class SSLPokeProxy {
             while (in.available() > 0) {
                 System.out.print(in.read());
             }
-            System.out.println("Successfully connected");
+            System.out.println(String.format("Successfully connected to %s:%s", args[0], args[1]));
         } catch (Exception exception) {
             exception.printStackTrace();
             System.exit(1);
@@ -77,17 +77,18 @@ public class SSLPokeProxy {
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(proxySocket.getOutputStream(), "ASCII7"));
         bw.write("CONNECT " + proxyHost + ":" + proxyPort + " HTTP/1.1\n"
                 + "Proxy-Connection: Keep-Alive"
-                + "User-Agent: " + SSLPoke.class.getName()
+                + "User-Agent: " + SSLPokeProxy.class.getName()
                 + "\r\n\r\n");
         bw.flush();
 
         BufferedReader br = new BufferedReader(new InputStreamReader(proxySocket.getInputStream(), "ASCII7"));
-
         
         String statusLine = br.readLine();
+        if (statusLine != null){
+            System.out.println("Response: "+ statusLine);
+        }
 
-
-        if (!statusLine.startsWith("HTTP/1.1 200")) {
+        if (statusLine == null || !statusLine.matches("^HTTP/1.\\d 200.*")) {
             throw new IOException("Unable to tunnel through "
                     + proxySocket.getInetAddress().getHostAddress() + ":" + proxySocket.getPort()
                     + ".  Proxy returns \"" + statusLine + "\"");
